@@ -1,0 +1,7 @@
+# node: ER-21
+# related: LNI-1014
+RP/0/RSP0/CPU0:ER-21 %BGP-5-ADJCHANGE : neighbor 198.51.100.1 Down - BGP Notification sent, hold time expired
+RP/0/RSP0/CPU0:ER-21 %BGP-5-ADJCHANGE : neighbor 198.51.100.1 Up
+# show bgp neighbor 198.51.100.1 | include hold time
+Hold time is 180, keepalive interval is 60 seconds
+Configured hold time: 180, keepalive: 60

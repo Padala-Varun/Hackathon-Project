@@ -1,0 +1,10 @@
+# node: CMG-07
+# related: LNI-1025
+2026-04-18 02:41:07 CMG-07 %BFD-5-SESSION_DOWN: BFD session to 10.20.1.1 down (detect time expired)
+2026-04-18 02:41:09 CMG-07 %BGP-5-ADJCHANGE: neighbor 10.20.1.1 Down - BFD adjacency down
+2026-04-18 02:41:31 CMG-07 %BFD-5-SESSION_UP: BFD session to 10.20.1.1 up
+2026-04-18 02:43:52 CMG-07 %BFD-5-SESSION_DOWN: BFD session to 10.20.1.1 down (detect time expired)
+# show bfd session
+Peer 10.20.1.1  State Down  Tx 1000ms  Rx 1000ms  Mult 3
+# show interface ethernet-1/1 | include MTU
+MTU 1500

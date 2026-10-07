@@ -1,0 +1,36 @@
+# Columns that must never be indexed or shown (customer / personal data). Dropped at ingestion.
+sanitize: [customers, customer, customer_name, operator, case_id, case, support_case, reporter, assignee,
+           project_manager, engineer, engineer_name, created_by, owner, email, phone]
+
+# Maps the canonical LNI fields to the column names a dataset might use.
+# Matching ignores case, spaces, dashes and underscores. Unknown columns are kept in `extra`
+# and still indexed. Add aliases here when the official dataset arrives - no code change needed.
+records:
+  id: [id, lni_id, lni, ticket_id, record_id, change_id, key, incident_id]
+  title: [title, summary, short_description, subject, name]
+  date: [date, created, created_at, change_date, start_time, opened, timestamp]
+  change_type: [change_type, type, category, activity, change_category]
+  vendor: [vendor, manufacturer, oem]
+  node: [node, node_name, node_id, hostname, ne, network_element, device, element]
+  node_type: [node_type, ne_type, device_type, component, components, product, technology_domain]
+  release: [release, version, sw_version, software_version, product_release, target_release, firmware]
+  mop_id: [mop_id, mop, mop_ref, mop_reference, procedure, procedure_id]
+  mop_step: [mop_step, step, failed_step, mop_step_no]
+  description: [description, details, change_description, execution_notes, notes, work_notes]
+  # JIRA-KB style tickets: "Product Release", "Technical solution provided", "RCA Category", "Sub-Components",
+  # "Technology", "Type" (VNF/OCP) are covered by the aliases above or kept in `extra` (still indexed).
+  symptoms: [symptoms, symptom, problem, issue, problem_description, problems_faced, observed, impact_description]
+  error_signature: [error_signature, error, errors, error_code, error_message, alarm, alarms, log_snippet]
+  commands: [commands, command, cli, command_output, commands_executed]
+  root_cause: [root_cause, rca, cause, root_cause_analysis, rca_notes, rca_summary]
+  resolution: [resolution, fix, solution, technical_solution, technical_solution_provided, workaround, remediation, resolution_notes]
+  learning: [learning, learnings, lessons_learned, lesson, precheck, prechecks, prevention, recommendation]
+  outcome: [outcome, status, result, change_result, change_outcome]
+  severity: [severity, priority, impact, risk]
+  verified: [verified, is_verified]
+  related_ids: [duplicate_of, related, related_ids, problem_id, cluster_id]
+tests:
+  id: [test_id, id, incident_id, case_id]
+  text: [query, text, incident, description, symptoms, new_incident, planned_lni]
+  expected: [expected, expected_ids, expected_match, correct_match, match_id, expected_lni, answer, ground_truth]
+  mode: [mode, type, kind]

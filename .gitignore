@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+backend/.venv/
+backend/models/
+backend/.env
+
+# Data generated at runtime (the synthetic dataset in data/raw is reproducible: python -m scripts.make_synthetic)
+data/store/
+
+# Real tickets must never be committed (ground rule: synthetic / sanitised data only)
+tickets.pdf
+*.msg
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

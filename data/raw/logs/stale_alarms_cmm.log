@@ -1,0 +1,7 @@
+# node: CMM-04
+# related: LNI-1017
+# ps -o pid,stat,cmd -p $(pgrep -f snmpservice.py)
+PID     STAT CMD
+3674453 Sl   python3 /opt/app/lib/snmpagent/snmpservice.py
+# NetAct alarm resync result
+uploaded 42 alarms, 17 not present on node (cancelled), maintenance mode = ON

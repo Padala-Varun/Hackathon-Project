@@ -1,0 +1,212 @@
+[
+  {
+    "test_id": "T01",
+    "mode": "pre_change",
+    "query": "Software upgrade on packet core gateway CMG-12 using MOP-UPG-04",
+    "expected": [
+      "LNI-1025",
+      "LNI-1079"
+    ]
+  },
+  {
+    "test_id": "T02",
+    "mode": "incident",
+    "query": "After the gateway release update the uplink BGP peers keep bouncing and big packets are dropped",
+    "expected": [
+      "LNI-1025",
+      "LNI-1079"
+    ]
+  },
+  {
+    "test_id": "T03",
+    "mode": "incident",
+    "query": "Lots of GTP path down alarms on the packet gateway after the new release but subscribers seem fine",
+    "expected": [
+      "LNI-1004",
+      "LNI-1072",
+      "LNI-1078"
+    ]
+  },
+  {
+    "test_id": "T04",
+    "mode": "incident",
+    "query": "Online charging not applied - sessions continue without quota since the OCS peer was changed",
+    "expected": [
+      "LNI-1042",
+      "LNI-1068",
+      "LNI-1073"
+    ]
+  },
+  {
+    "test_id": "T05",
+    "mode": "incident",
+    "query": "NetAct still lists alarms that the CMM already cleared and we cannot delete them",
+    "expected": [
+      "LNI-1017",
+      "LNI-1030",
+      "LNI-1043"
+    ]
+  },
+  {
+    "test_id": "T06",
+    "mode": "incident",
+    "query": "eBGP to transit keeps dropping with hold time expired since we patched the router",
+    "expected": [
+      "LNI-1014",
+      "LNI-1059",
+      "LNI-1065"
+    ]
+  },
+  {
+    "test_id": "T07",
+    "mode": "incident",
+    "query": "BGP session flapping on edge router after firmware push; big pings fail, small ones work",
+    "expected": [
+      "LNI-1033",
+      "LNI-1063",
+      "LNI-1097"
+    ]
+  },
+  {
+    "test_id": "T08",
+    "mode": "incident",
+    "query": "Lost OAM reachability to many sites after reloading the core router",
+    "expected": [
+      "LNI-1013",
+      "LNI-1020",
+      "LNI-1083"
+    ]
+  },
+  {
+    "test_id": "T09",
+    "mode": "incident",
+    "query": "oc adm drain hangs - cannot evict pod because of the disruption budget",
+    "expected": [
+      "LNI-1066",
+      "LNI-1070",
+      "LNI-1080"
+    ]
+  },
+  {
+    "test_id": "T10",
+    "mode": "incident",
+    "query": "Pods restart continuously after deploying the new container version, logs show a missing config key",
+    "expected": [
+      "LNI-1012",
+      "LNI-1022",
+      "LNI-1041"
+    ]
+  },
+  {
+    "test_id": "T11",
+    "mode": "incident",
+    "query": "Interconnect partner rejects our TLS since the SBC certificate was renewed - unknown CA",
+    "expected": [
+      "LNI-1006",
+      "LNI-1060",
+      "LNI-1088"
+    ]
+  },
+  {
+    "test_id": "T12",
+    "mode": "incident",
+    "query": "eNodeBs dropping S1 right after the firewall policy cleanup",
+    "expected": [
+      "LNI-1005",
+      "LNI-1064",
+      "LNI-1077"
+    ]
+  },
+  {
+    "test_id": "T13",
+    "mode": "incident",
+    "query": "CMM upgrade failed with ENOSPC while extracting the image",
+    "expected": [
+      "LNI-1023",
+      "LNI-1054",
+      "LNI-1084"
+    ]
+  },
+  {
+    "test_id": "T14",
+    "mode": "incident",
+    "query": "Attach rejected at peak on the newly migrated mobility manager, subscriber count capped",
+    "expected": [
+      "LNI-1046",
+      "LNI-1058",
+      "LNI-1092"
+    ]
+  },
+  {
+    "test_id": "T15",
+    "mode": "incident",
+    "query": "HSS Diameter peer will not come up after we changed DNS servers, lookups return NXDOMAIN",
+    "expected": [
+      "LNI-1034",
+      "LNI-1050",
+      "LNI-1074"
+    ]
+  },
+  {
+    "test_id": "T16",
+    "mode": "incident",
+    "query": "Node clock is minutes off after replacing the board and records are rejected downstream",
+    "expected": [
+      "LNI-1031",
+      "LNI-1040",
+      "LNI-1048"
+    ]
+  },
+  {
+    "test_id": "T17",
+    "mode": "incident",
+    "query": "NetAct shows the gateway as disconnected since the upgrade - SNMP authentication failures",
+    "expected": [
+      "LNI-1021",
+      "LNI-1027",
+      "LNI-1095"
+    ]
+  },
+  {
+    "test_id": "T18",
+    "mode": "incident",
+    "query": "IPsec tunnels to sites go down every 60 minutes since the security gateway update",
+    "expected": [
+      "LNI-1036",
+      "LNI-1053",
+      "LNI-1057"
+    ]
+  },
+  {
+    "test_id": "T19",
+    "mode": "incident",
+    "query": "Portal returns 503 after the app release; every pool member is down on the load balancer",
+    "expected": [
+      "LNI-1008",
+      "LNI-1015",
+      "LNI-1076"
+    ]
+  },
+  {
+    "test_id": "T20",
+    "mode": "incident",
+    "query": "Voice quality is bad after moving the uplink to a new port - QoS looks missing",
+    "expected": [
+      "LNI-1010",
+      "LNI-1032",
+      "LNI-1069"
+    ]
+  },
+  {
+    "test_id": "T21",
+    "mode": "incident",
+    "query": "Office printer on floor 3 does not print double-sided",
+    "expected": []
+  },
+  {
+    "test_id": "T22",
+    "mode": "incident",
+    "query": "Kafka consumer lag growing on the analytics data lake",
+    "expected": []
+  }
+]

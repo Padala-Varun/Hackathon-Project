@@ -1,0 +1,8 @@
+# node: OCP-02
+# related: LNI-1066
+$ oc adm drain worker-3 --ignore-daemonsets --delete-emptydir-data
+evicting pod cnf/policy-engine-7d9f
+error when evicting pods/"policy-engine-7d9f" -n "cnf" (will retry after 5s): Cannot evict pod as it would violate the pod's disruption budget.
+$ oc get pdb -n cnf
+NAME            MIN AVAILABLE   ALLOWED DISRUPTIONS
+policy-engine   2               0
