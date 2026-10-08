@@ -1,28 +1,115 @@
 @import "tailwindcss";
 
+/* ---------- theme tokens (light default, dark via [data-theme=dark]) ---------- */
+:root {
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
+  --surface-3: #eef1f4;
+  --line: #e4e7ec;
+  --line-strong: #cfd5dd;
+  --fg: #101828;
+  --muted: #475467;
+  --subtle: #667085;
+  --accent: #f0a500;
+  --accent-ink: #8a5a00;
+  --link: #2563eb;
+  --ok: #15803d;
+  --warn: #c2410c;
+  --bad: #c81e1e;
+  --chart: #d18f00;
+  --shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-lg: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 4px 8px -4px rgb(16 24 40 / 0.06);
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0e13;
+  --surface: #12161d;
+  --surface-2: #161b23;
+  --surface-3: #1c222c;
+  --line: #242c38;
+  --line-strong: #323d4d;
+  --fg: #e8edf3;
+  --muted: #a5b1c1;
+  --subtle: #7d8a9c;
+  --accent: #f5b301;
+  --accent-ink: #f5b301;
+  --link: #6aa6ff;
+  --ok: #4ade80;
+  --warn: #fb923c;
+  --bad: #f87171;
+  --chart: #f5b301;
+  --shadow: 0 1px 0 rgb(255 255 255 / 0.02), 0 1px 3px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 16px 40px -8px rgb(0 0 0 / 0.6);
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --color-ink-950: #0a0d12;
-  --color-ink-900: #10151d;
-  --color-ink-850: #141b25;
-  --color-ink-800: #1a2330;
-  --color-ink-700: #263243;
-  --color-ink-500: #5b6b80;
-  --color-ink-300: #a3b1c2;
-  --color-ink-100: #e6edf5;
-  --color-amber: #f5b301;
-  --color-ok: #4ade80;
-  --color-warn: #facc15;
-  --color-info: #60a5fa;
-  --color-bad: #f87171;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-link: var(--link);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-chart: var(--chart);
+  --shadow-card: var(--shadow);
+  --shadow-pop: var(--shadow-lg);
 }
 
-html, body, #root { height: 100%; }
-body { background: var(--color-ink-950); color: var(--color-ink-100); }
+html { scroll-behavior: smooth; }
+html, body, #root { min-height: 100%; }
+body { background: var(--bg); color: var(--fg); -webkit-font-smoothing: antialiased; }
+::selection { background: color-mix(in oklab, var(--accent) 35%, transparent); }
+:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 6px; }
 
-.scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
-.scroll-thin::-webkit-scrollbar-thumb { background: var(--color-ink-700); border-radius: 3px; }
+.scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 4px; }
 
+/* ---------- motion ---------- */
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-in-right { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes slide-in-left { from { transform: translateX(-100%); } to { transform: none; } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
 @keyframes blink { 50% { opacity: 0; } }
-.caret::after { content: "▍"; animation: blink 1s steps(1) infinite; color: var(--color-amber); }
+@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.animate-fade-up { animation: fade-up 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.animate-fade-in { animation: fade-in 0.25s ease both; }
+.animate-drawer { animation: slide-in-right 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.animate-sidebar { animation: slide-in-left 0.25s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.animate-toast { animation: toast-in 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.animate-pulse-dot { animation: pulse-dot 1.4s ease-in-out infinite; }
+.caret::after { content: "▍"; animation: blink 1s steps(1) infinite; color: var(--accent); }
+
+.skeleton { position: relative; overflow: hidden; background: var(--surface-3); border-radius: 8px; }
+.skeleton::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--fg) 7%, transparent), transparent);
+  animation: shimmer 1.3s infinite;
+}
+
+/* smooth accordion: grid-rows 0fr -> 1fr */
+.reveal { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s ease; }
+.reveal[data-open="true"] { grid-template-rows: 1fr; }
+.reveal > * { overflow: hidden; min-height: 0; }
+
+.lift { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+.lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  html { scroll-behavior: auto; }
+}

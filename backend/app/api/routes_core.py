@@ -7,11 +7,12 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from ..agent.learning import write_learning
 from ..config import settings
-from ..schemas import (FeedbackRequest, FeedbackResponse, IngestRequest, IngestResponse, LNIRecord, MatchRequest,
-                       MatchResponse, MopDoc, Recommendation, RecommendRequest)
+from ..schemas import (FeedbackRequest, FeedbackResponse, Fingerprint, IngestRequest, IngestResponse, LNIRecord,
+                       MatchRequest, MatchResponse, MopDoc, Recommendation, RecommendRequest)
 from ..services import get_agent, get_kb
 
 router = APIRouter()
@@ -37,6 +38,19 @@ def match(req: MatchRequest) -> MatchResponse:
     threshold = settings.match_threshold
     return MatchResponse(fingerprint=fp, matches=matches, threshold=threshold,
                          no_match=not matches or matches[0].confidence < threshold)
+
+
+class FingerprintRequest(BaseModel):
+    text: str
+    node: str | None = None
+    release: str | None = None
+    mop_id: str | None = None
+
+
+@router.post("/fingerprint", response_model=Fingerprint, tags=["core"],
+             summary="Only the fingerprint step: node, node type, MOP, release, error and command signatures found in text")
+def fingerprint(req: FingerprintRequest) -> Fingerprint:
+    return get_kb().fingerprinter.extract(req.text, req.node, req.release, req.mop_id)
 
 
 @router.post("/recommend", response_model=Recommendation, tags=["core"],
@@ -109,6 +123,18 @@ def case(record_id: str) -> LNIRecord:
     return r
 
 
+@router.delete("/cases/{record_id}", tags=["knowledge"],
+               summary="Delete a saved lesson (LRN-...). Records from the official dataset cannot be deleted")
+def delete_case(record_id: str) -> dict[str, str]:
+    try:
+        r = get_kb().delete_record(record_id)
+    except KeyError as exc:
+        raise HTTPException(404, f"{record_id} not found") from exc
+    except PermissionError as exc:
+        raise HTTPException(403, str(exc)) from exc
+    return {"deleted": r.id, "message": f"Lesson {r.id} deleted and removed from search"}
+
+
 @router.get("/mops", response_model=list[MopDoc], tags=["knowledge"])
 def mops() -> list[MopDoc]:
     return list(get_kb().mops.values())
@@ -118,6 +144,25 @@ def mops() -> list[MopDoc]:
 def nodes() -> list[dict[str, str]]:
     info = get_kb().fingerprinter.node_info
     return [{"node": n, "node_type": t, "vendor": v} for n, (t, v) in sorted(info.items())]
+
+
+@router.get("/products", tags=["knowledge"], summary="Products / node types in the history, with record counts")
+def products() -> list[dict[str, Any]]:
+    counts = Counter(r.node_type for r in get_kb().records.values() if r.node_type)
+    return [{"node_type": t, "records": n} for t, n in sorted(counts.items())]
+
+
+@router.get("/lesson-options", tags=["knowledge"], summary="Values already used for Components / Build / RCA category")
+def lesson_options() -> dict[str, list[str]]:
+    recs = get_kb().records.values()
+    def values(key: str) -> list[str]:
+        out = set()
+        for r in recs:
+            for v in str(r.extra.get(key, "")).split(","):
+                if v.strip():
+                    out.add(v.strip())
+        return sorted(out)
+    return {"components": values("Components"), "builds": values("Build"), "rca_categories": values("RCA category")}
 
 
 @router.get("/tools", tags=["info"], summary="The agent's tool registry (JSON schemas)")

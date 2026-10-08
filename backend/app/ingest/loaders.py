@@ -80,6 +80,7 @@ def _looks_like_mop(name: str, text: str) -> bool:
 
 def scan(root: Path, expected_aliases: set[str]) -> RawDataset:
     ds = RawDataset()
+    msg_files: list[Path] = []
     for path in sorted(p for p in root.rglob("*") if p.is_file()):
         suffix = path.suffix.lower()
         parts = {p.lower() for p in path.relative_to(root).parts[:-1]}
@@ -90,6 +91,9 @@ def scan(root: Path, expected_aliases: set[str]) -> RawDataset:
                     ds.tests += rows
                 else:
                     ds.records += rows
+            elif suffix == ".msg":
+                msg_files.append(path)
+                continue
             elif suffix == ".log" or any("log" in p for p in parts):
                 ds.logs.append((path.name, read_text(path)))
             elif suffix in DOCS:
@@ -103,4 +107,10 @@ def scan(root: Path, expected_aliases: set[str]) -> RawDataset:
             ds.files.append(str(path.relative_to(root)))
         except Exception as exc:  # one bad file must not stop ingestion
             print(f"[ingest] skipped {path.name}: {exc}")
+    if msg_files:  # JIRA notification emails: merge per ticket, drop test tickets, structure
+        from .msg_reader import is_junk, merge_tickets, read_msg, to_row
+
+        tickets = merge_tickets([r for p in msg_files if (r := read_msg(p))])
+        ds.records += [to_row(t) for t in tickets if not is_junk(t)]
+        ds.files += [str(p.relative_to(root)) for p in msg_files]
     return ds

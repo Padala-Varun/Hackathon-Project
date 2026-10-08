@@ -6,10 +6,10 @@ sanitize: [customers, customer, customer_name, operator, case_id, case, support_
 # Matching ignores case, spaces, dashes and underscores. Unknown columns are kept in `extra`
 # and still indexed. Add aliases here when the official dataset arrives - no code change needed.
 records:
-  id: [id, lni_id, lni, ticket_id, record_id, change_id, key, incident_id]
+  id: [id, lni_id, lni, ticket_id, ticket_key, record_id, change_id, key, incident_id]
   title: [title, summary, short_description, subject, name]
   date: [date, created, created_at, change_date, start_time, opened, timestamp]
-  change_type: [change_type, type, category, activity, change_category]
+  change_type: [change_type, type, category, activity, change_category, phase]
   vendor: [vendor, manufacturer, oem]
   node: [node, node_name, node_id, hostname, ne, network_element, device, element]
   node_type: [node_type, ne_type, device_type, component, components, product, technology_domain]

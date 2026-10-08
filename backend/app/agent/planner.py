@@ -35,9 +35,10 @@ def _filter_node_type(fp: Fingerprint) -> str | None:
     return fp.node_types[0] if (fp.nodes or fp.mop_ids) and fp.node_types else None
 
 
-def make_plan(mode: Mode, fp: Fingerprint, text: str, mop_title: str = "") -> list[PlanStep]:
+def make_plan(mode: Mode, fp: Fingerprint, text: str, mop_title: str = "",
+              explicit_type: str | None = None) -> list[PlanStep]:
     node = fp.nodes[0] if fp.nodes else None
-    node_type = _filter_node_type(fp)
+    node_type = explicit_type or _filter_node_type(fp)
     steps: list[PlanStep] = []
     if mode == "pre_change":
         if node:
@@ -46,6 +47,9 @@ def make_plan(mode: Mode, fp: Fingerprint, text: str, mop_title: str = "") -> li
             steps.append(PlanStep("search_by_mop_step", {"mop_id": fp.mop_ids[0]},
                                   f"Look for known pitfalls at each step of {fp.mop_ids[0]}"))
         query = f"{text}. {mop_title}".strip(". ")
+        if fp.node_types and fp.releases:
+            steps.append(PlanStep("search_by_fingerprint", {"node_type": fp.node_types[0], "release": fp.releases[0]},
+                                  f"Known issues recorded for {fp.node_types[0]} release {fp.releases[0]} (fingerprint match)"))
         steps.append(PlanStep("search_by_symptom", {"text": query, "node_type": node_type},
                               "Find past LNIs similar to this planned change"
                               + (f" (metadata filter: node type {node_type})" if node_type else "")))

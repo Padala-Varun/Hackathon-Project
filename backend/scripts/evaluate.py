@@ -62,6 +62,8 @@ def eval_agent(agent, tests) -> tuple[dict, list[str]]:
         times.append(time.time() - t0)
         retrieved = {i for m in rec.matches for i in m.all_ids} | {c for s in rec.mop_steps for w in s.warnings for c in w.citations}
         for item in rec.items + rec.prechecks:
+            if item.kind == "general":  # generic best-practice checks are shown as "not from history", by design
+                continue
             cites_total += 1
             cites_ok += bool(item.citations) and set(item.citations) <= retrieved
         if t["expected"]:

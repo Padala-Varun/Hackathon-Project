@@ -9,6 +9,7 @@ from typing import Any
 import yaml
 
 from ..glossary import NODE_PREFIX_TYPES
+from .extract import extract_learning, extract_root_cause
 from ..schemas import LNIRecord, LogSnippet, MopDoc, MopStep
 from ..textutil import find_commands, find_errors, find_mops, find_nodes
 
@@ -78,7 +79,7 @@ def to_record(raw: dict[str, Any], mapper: FieldMapper, index: int) -> LNIRecord
     node = g("node").upper()
     text_blob = " ".join([g("title"), g("description"), g("symptoms")])
     if not node:
-        nodes = find_nodes(text_blob)
+        nodes = [n for n in find_nodes(text_blob) if n.split('-')[0] in NODE_PREFIX_TYPES]
         node = nodes[0] if nodes else ""
     mop_id = g("mop_id").upper().replace("_", "-")
     if not mop_id:
@@ -101,9 +102,10 @@ def to_record(raw: dict[str, Any], mapper: FieldMapper, index: int) -> LNIRecord
         symptoms=g("symptoms"),
         error_signature=g("error_signature") or "; ".join(find_errors(text_blob)[:4]),
         commands=g("commands") or "; ".join(find_commands(g("description") + "\n" + g("resolution"))[:4]),
-        root_cause=g("root_cause"),
+        # tickets without dedicated fields: extract them from the free text (structure-the-data step)
+        root_cause=g("root_cause") or extract_root_cause(g("symptoms") or g("description"), g("resolution")),
         resolution=g("resolution"),
-        learning=g("learning"),
+        learning=g("learning") or extract_learning(g("symptoms") or g("description"), g("resolution")),
         outcome=g("outcome"),
         severity=g("severity"),
         verified=_as_bool(m.get("verified")),

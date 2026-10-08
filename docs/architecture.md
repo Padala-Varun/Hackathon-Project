@@ -5,7 +5,7 @@
 ```mermaid
 flowchart LR
     subgraph Inputs
-        A[LNI tickets & RCAs<br/>JSON / CSV]
+        A[LNI tickets & RCAs<br/>JSON / CSV / JIRA .msg]
         B[MOPs & change records<br/>md / docx / pdf]
         C[Logs & command outputs]
     end

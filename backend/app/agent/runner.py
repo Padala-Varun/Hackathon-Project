@@ -19,7 +19,14 @@ if TYPE_CHECKING:
     from ..services import KnowledgeBase
 
 SEVERITY_W = {"critical": 1.0, "high": 1.0, "medium": 0.6, "low": 0.3}
-OUTCOME_W = {"outage": 1.0, "rollback": 0.9, "service degraded": 0.75, "degraded": 0.75, "resolved": 0.45}
+OUTCOME_W = {"outage": 1.0, "rollback": 0.9, "service degraded": 0.75, "degraded": 0.75, "open - no fix yet": 0.8,
+             "resolved": 0.6}  # a documented known issue is still a pitfall for the next change
+
+
+def short(text: str, n: int = 280) -> str:
+    """First part of a long field (procedures can be pages long); the full text is in the record."""
+    text = " ".join((text or "").split())
+    return text if len(text) <= n else text[: n - 1].rsplit(" ", 1)[0] + "… (full steps in the record)"
 
 
 def describe_fp(fp: Fingerprint) -> str:
@@ -55,7 +62,7 @@ class Agent:
             return e
 
         threshold = self.s.match_threshold
-        fp = self.kb.fingerprinter.extract(req.text, req.node, req.release, req.mop_id)
+        fp = self.kb.fingerprinter.extract(req.text, req.node, req.release, req.mop_id, req.node_type)
         yield ev("fingerprint", describe_fp(fp), fingerprint=fp.model_dump())
 
         clar = guardrails.clarification_needed(req.mode, fp, req, self.kb)
@@ -69,7 +76,7 @@ class Agent:
             return
 
         mop = self.kb.mops.get(fp.mop_ids[0]) if fp.mop_ids else None
-        plan = make_plan(req.mode, fp, req.text, mop.title if mop else "")
+        plan = make_plan(req.mode, fp, req.text, mop.title if mop else "", req.node_type)
         yield ev("plan", f"Planned {len(plan)} tool call(s)", steps=[p.describe() for p in plan])
 
         merged: dict[str, Match] = {}
@@ -200,19 +207,28 @@ class Agent:
         if mode == "incident":
             top = matches[0]
             seen = f", seen {len(top.all_ids)}x" if top.duplicates else ""
-            items.append(RecItem(kind="cause", text=f"Most likely root cause ({top.confidence}% match{seen}): "
-                                 f"{top.root_cause}", citations=top.all_ids, confidence=top.confidence))
+            if top.root_cause:
+                items.append(RecItem(kind="cause", text=f"Most likely root cause ({top.confidence}% match{seen}): "
+                                     f"{short(top.root_cause)}", citations=top.all_ids, confidence=top.confidence))
+            else:
+                items.append(RecItem(kind="cause", text=f"Most similar known case ({top.confidence}% match{seen}): "
+                                     f"{top.title}", citations=top.all_ids, confidence=top.confidence))
             if top.resolution:
-                items.append(RecItem(kind="fix", text=f"Fix that worked: {top.resolution}", citations=top.all_ids,
+                items.append(RecItem(kind="fix", text=f"Fix that worked: {short(top.resolution)}", citations=top.all_ids,
+                                     confidence=top.confidence))
+            else:
+                items.append(RecItem(kind="alternative", text="Known open issue: no verified fix has been recorded yet. "
+                                     "Escalate, and save the fix as a lesson once found", citations=top.all_ids,
                                      confidence=top.confidence))
             for m in matches[1:3]:
                 if m.confidence >= top.confidence - 20:
-                    items.append(RecItem(kind="alternative", text=f"Also consider ({m.confidence}% match): {m.root_cause}",
-                                         citations=m.all_ids, confidence=m.confidence))
+                    items.append(RecItem(kind="alternative", text=f"Also consider ({m.confidence}% match): "
+                                         f"{short(m.root_cause or m.title, 200)}", citations=m.all_ids, confidence=m.confidence))
         else:
             for m in matches[:5]:
-                where = f"{m.outcome or 'issue'} on {m.node or m.node_type}, {m.date}"
-                items.append(RecItem(kind="pitfall", text=f"Known pitfall ({where}): {m.root_cause}",
+                where = ", ".join(x for x in (f"{m.outcome or 'issue'} on {m.node or m.node_type}".strip(), m.release and
+                                              f"release {m.release}", m.date) if x)
+                items.append(RecItem(kind="pitfall", text=f"Known pitfall ({where}): {short(m.root_cause or m.title, 220)}",
                                      citations=m.all_ids, confidence=m.confidence))
         texts: set[str] = set()
         for m in matches[:5]:
@@ -227,9 +243,9 @@ class Agent:
     def _risk(self, matches: list[Match], history: list[dict[str, Any]], mop_steps: list[MopStepAdvice]) -> Risk:
         p_safe, reasons = 1.0, []
         for m in matches:
-            w = (m.confidence / 100) * SEVERITY_W.get(m.severity.lower(), 0.5) * OUTCOME_W.get(m.outcome.lower(), 0.5)
+            w = (m.confidence / 100) * SEVERITY_W.get(m.severity.lower(), 0.7) * OUTCOME_W.get(m.outcome.lower(), 0.6)
             w *= 1 + 0.15 * len(m.duplicates)
-            p_safe *= 1 - min(0.9, 0.6 * w)
+            p_safe *= 1 - min(0.9, 0.75 * w)
             seen = f", seen {len(m.all_ids)}x" if m.duplicates else ""
             reasons.append(f"{m.record_id}: {m.outcome or 'issue'} ({m.severity or 'n/a'} severity), "
                            f"{m.confidence}% match{seen}")

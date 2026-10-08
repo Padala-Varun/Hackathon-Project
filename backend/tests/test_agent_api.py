@@ -82,13 +82,44 @@ def test_feedback_writes_back_and_is_searchable(client, kb):
         "incident_text": "CMG-12 GTP-U throughput collapsed after 24.7 activation; uplink MTU back to 1500",
         "verified_by": "eng-test", "matched_ids": [sorted(mtu_bfd_ids(kb))[0]],
         "verified_root_cause": "Release 24.7 reset uplink MTU to 1500", "verified_fix": "Re-applied MTU 9000",
-        "learning": "Check MTU after each CMG upgrade", "ticket_id": "INC-5002"})
+        "learning": "Check MTU after each CMG upgrade", "ticket_id": "INC-5002",
+        "components": "CMG", "build": "24.7.0.3", "rca_category": "Nokia-Config"})
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["record"]["source"] == "learning" and body["ticket"]["status"] == "Resolved"
+    from datetime import datetime
+    saved_at = datetime.fromisoformat(body["record"]["verified_at"])  # full timestamp: date + time + offset
+    assert saved_at.tzinfo is not None and body["record"]["date"] == saved_at.date().isoformat()
+    assert body["ticket"]["learnings"][-1]["timestamp"] == body["record"]["verified_at"]
     assert kb.stats()["learnings"] == before + 1
     found = client.post("/match", json={"text": "GTP-U throughput collapsed after activation, uplink MTU 1500"}).json()
     assert body["record"]["id"] in [m["record_id"] for m in found["matches"]]
+
+
+def test_new_lesson_requires_components_build_rca(client):
+    base = {"incident_text": "CMG gateway lost MTU after upgrade", "verified_by": "eng", "verified_fix": "Re-applied MTU"}
+    r = client.post("/feedback", json=base)
+    assert r.status_code == 422 and "Components" in r.text and "Build" in r.text and "RCA category" in r.text
+    r = client.post("/feedback", json={**base, "components": "CMG-a2", "build": "26.7.0.1", "rca_category": "Nokia-Config"})
+    assert r.status_code == 200
+    rec = r.json()["record"]
+    assert rec["node_type"] == "CMG"
+    assert rec["extra"] == {"Components": "CMG-a2", "Build": "26.7.0.1", "RCA category": "Nokia-Config"}
+
+
+def test_delete_saved_lesson_only(client, kb):
+    body = {"incident_text": "Zebra unique tracer fault on CMG", "verified_by": "eng", "verified_fix": "Zebra fix",
+            "components": "CMG", "build": "26.7.0.1", "rca_category": "Nokia-Config", "ticket_id": "INC-5003"}
+    rid = client.post("/feedback", json=body).json()["record"]["id"]
+    assert rid in kb.index.by_record
+    assert client.delete(f"/cases/{rid}").status_code == 200
+    assert client.get(f"/cases/{rid}").status_code == 404
+    assert rid not in kb.index.by_record  # gone from search too
+    ticket = client.get("/tickets/INC-5003").json()
+    assert all(n.get("record_id") != rid for n in ticket["learnings"])
+    dataset_id = next(r.id for r in kb.records.values() if r.source == "dataset")
+    assert client.delete(f"/cases/{dataset_id}").status_code == 403
+    assert client.delete("/cases/LRN-9999").status_code == 404
 
 
 def test_feedback_requires_a_human(client):
@@ -107,3 +138,8 @@ def test_trends_find_recurring_problems(client):
     t = client.get("/trends").json()
     assert t["problem_records"] > 50 and "CMG" in t["by_node_type"]
     assert all(c["count"] >= 2 for c in t["recurring"])
+
+
+def test_fingerprint_endpoint(client):
+    fp = client.post("/fingerprint", json={"text": "Software upgrade on CMG-12 using MOP-UPG-04 to 24.3"}).json()
+    assert fp["nodes"] == ["CMG-12"] and fp["mop_ids"] == ["MOP-UPG-04"] and "24.3" in fp["releases"]

@@ -50,6 +50,10 @@ class Store:
             else:
                 self._conn.execute(f"DELETE FROM {table} WHERE source = ?", (source,))
 
+    def delete(self, table: str, id: str) -> bool:
+        with self._lock, self._conn:
+            return self._conn.execute(f"DELETE FROM {table} WHERE id = ?", (id,)).rowcount > 0
+
     def count(self, table: str) -> int:
         return self._conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
 

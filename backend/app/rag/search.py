@@ -28,7 +28,7 @@ class SearchConfig:
     bm25: bool = True
     rerank: bool = True
     fingerprint: bool = True
-    candidates: int = 30
+    candidates: int = 20  # candidates pooled by RRF and rescored by the cross-encoder
 
 
 @dataclass
@@ -65,8 +65,9 @@ class HybridSearcher:
             return []
         bm = dict(bm25)
         bm_max = max(bm.values()) if bm else 1.0
+        # the cross-encoder cost grows with text length: the first ~600 chars of a chunk carry its meaning
         probs = (
-            self.reranker.scores(query, [_strip_header(self.index.chunks[c].text) for c in cands])
+            self.reranker.scores(query, [_strip_header(self.index.chunks[c].text)[:600] for c in cands])
             if cfg.rerank and self.reranker
             else [None] * len(cands)
         )
@@ -222,8 +223,10 @@ def fingerprint_bonus(r: LNIRecord, fp: Fingerprint) -> tuple[float, list[str]]:
     if r.vendor and r.vendor.lower() in low(fp.vendors):
         b += 0.02
     if r.release and r.release in fp.releases:
-        b += 0.03
-        why.append(f"Same release {r.release}")
+        # same product AND same release is a strong technical fingerprint (e.g. "upgrade CMM to 26.7")
+        same_product = bool(r.node_type) and r.node_type.lower() in low(fp.node_types)
+        b += 0.08 if same_product else 0.03
+        why.append(f"Same {'product and ' if same_product else ''}release {r.release}")
     if r.mop_id and r.mop_id in fp.mop_ids:
         b += 0.08
         why.append(f"Same MOP {r.mop_id}" + (f" step {r.mop_step}" if r.mop_step else ""))
@@ -235,6 +238,11 @@ def fingerprint_bonus(r: LNIRecord, fp: Fingerprint) -> tuple[float, list[str]]:
     return min(b, 0.2), why
 
 
+def _summary(text: str, n: int = 320) -> str:
+    text = " ".join((text or "").split())
+    return text if len(text) <= n else text[: n - 1].rsplit(" ", 1)[0] + "…"
+
+
 def to_match(r: LNIRecord, conf: int, reasons: list[str], evidence: list[Evidence],
              score: float | None = None) -> Match:
     return Match(
@@ -242,5 +250,6 @@ def to_match(r: LNIRecord, conf: int, reasons: list[str], evidence: list[Evidenc
         node=r.node, node_type=r.node_type, vendor=r.vendor,
         release=r.release, mop_id=r.mop_id, mop_step=r.mop_step, date=r.date, outcome=r.outcome,
         severity=r.severity, root_cause=r.root_cause, resolution=r.resolution, learning=r.learning,
+        summary=_summary(r.symptoms or r.description), verified_at=r.verified_at,
         verified=r.verified, source=r.source, success_count=r.success_count, reasons=reasons, evidence=evidence,
     )

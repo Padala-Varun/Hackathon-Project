@@ -1,7 +1,7 @@
 """Mock integrations: a ticketing API (read incidents, write learnings), node history and a webhook receiver."""
 from __future__ import annotations
 
-from datetime import date
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -37,7 +37,7 @@ def add_ticket_learning(ticket_id: str, body: TicketLearning) -> dict[str, Any]:
     t = kb.store.get("tickets", ticket_id)
     if not t:
         raise HTTPException(404, f"{ticket_id} not found")
-    t.setdefault("learnings", []).append({"by": body.author, "date": date.today().isoformat(), "note": body.text})
+    t.setdefault("learnings", []).append({"by": body.author, "timestamp": datetime.now().astimezone().isoformat(timespec="seconds"), "note": body.text})
     kb.store.upsert("tickets", ticket_id, t, t.get("type", ""))
     return t
 

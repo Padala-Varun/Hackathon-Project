@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import httpx
 
+from ..rag.search import to_match
 from ..schemas import Fingerprint, Match, MopDoc, MopStepAdvice, RecItem
 
 if TYPE_CHECKING:
@@ -70,6 +71,16 @@ def build_tools(kb: "KnowledgeBase", webhook_url: str, threshold: int) -> ToolRe
             out.append(MopStepAdvice(no=step.no, text=step.text, warnings=list(warnings.values())))
         return out
 
+    def search_by_fingerprint(node_type: str, release: str, top_k: int = 5) -> list[Match]:
+        """Known issues recorded for the same product AND release (the deck's 'fingerprint matching')."""
+        def same_release(r: str) -> bool:
+            return bool(r) and (r == release or r.startswith(release + ".") or release.startswith(r + "."))
+        hits = [r for r in kb.records.values()
+                if r.is_problem and r.node_type.lower() == node_type.lower() and same_release(r.release)]
+        hits.sort(key=lambda r: r.date, reverse=True)
+        return [to_match(r, 62, [f"Fingerprint match: known issue recorded for {r.node_type} release {r.release}"], [])
+                for r in hits[:top_k]]
+
     def node_history(node: str, limit: int = 10) -> list[dict[str, Any]]:
         recs = sorted((r for r in kb.records.values() if r.node.upper() == node.upper()), key=lambda r: r.date,
                       reverse=True)
@@ -98,6 +109,9 @@ def build_tools(kb: "KnowledgeBase", webhook_url: str, threshold: int) -> ToolRe
                             "fields": {"type": "array", "items": {"type": "string"}}}, ["text"]), search_by_symptom))
     reg.register(Tool("search_by_mop_step", "For each step of a MOP, find past LNIs that failed at or near that step.",
                       _obj({"mop_id": {"type": "string"}}, ["mop_id"]), search_by_mop_step))
+    reg.register(Tool("search_by_fingerprint", "Known issues recorded for the same product and release.",
+                      _obj({"node_type": {"type": "string"}, "release": {"type": "string"}}, ["node_type", "release"]),
+                      search_by_fingerprint))
     reg.register(Tool("node_history", "List past LNIs executed on a node, newest first.",
                       _obj({"node": {"type": "string"}}, ["node"]), node_history))
     reg.register(Tool("get_mop", "Read a MOP and its steps.", _obj({"mop_id": {"type": "string"}}, ["mop_id"]), get_mop))

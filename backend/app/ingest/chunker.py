@@ -21,7 +21,9 @@ def record_chunks(r: LNIRecord) -> list[Chunk]:
     has_symptoms = bool(r.symptoms or r.error_signature)
     fields = {
         "symptom": join(r.title, r.symptoms, r.error_signature) if has_symptoms else "",
-        "change": join(r.change_type, "" if has_symptoms else r.title, r.description, mop_ref),
+        # only a real description of the change (a bare phase word like "Integration" would just be noise)
+        "change": join(r.change_type, "" if has_symptoms else r.title, r.description, mop_ref)
+        if (r.description or mop_ref or not has_symptoms) else "",
         "root_cause": r.root_cause,
         "resolution": join(r.resolution, r.commands),
         "learning": r.learning,

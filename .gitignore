@@ -9,10 +9,14 @@ backend/.env
 # Data generated at runtime (the synthetic dataset in data/raw is reproducible: python -m scripts.make_synthetic)
 data/store/
 
-# Real tickets must never be committed (ground rule: synthetic / sanitised data only)
+# Raw ticket e-mails stay local (they contain names and customer data); the cleaned JSON in data/raw/official is committed
 tickets.pdf
 *.msg
 
 # Frontend
 frontend/node_modules/
 frontend/dist/
+
+# Secrets (API keys) must never be committed
+.env
+*.env

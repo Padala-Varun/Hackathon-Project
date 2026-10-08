@@ -17,14 +17,18 @@ async function req(path, opts = {}) {
 export const api = {
   health: () => req('/health'),
   nodes: () => req('/nodes'),
+  products: () => req('/products'),
   mops: () => req('/mops'),
   tickets: (status) => req(`/tickets${status ? `?status=${status}` : ''}`),
   cases: (params = {}) => req(`/cases?${new URLSearchParams(params)}`),
   case: (id) => req(`/cases/${encodeURIComponent(id)}`),
+  deleteCase: (id) => req(`/cases/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   trends: () => req('/trends'),
   digest: (days = 30) => req(`/digest?days=${days}`),
   notifications: () => req('/notifications'),
   feedback: (body) => req('/feedback', { method: 'POST', body }),
+  fingerprint: (body) => req('/fingerprint', { method: 'POST', body }),
+  lessonOptions: () => req('/lesson-options'),
 }
 
 /** POST /recommend/stream and call onEvent for every Server-Sent Event (agent trace, LLM tokens, final). */

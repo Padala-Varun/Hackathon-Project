@@ -141,6 +141,34 @@ class KnowledgeBase:
             self.records[r.id] = r
             self.store.upsert("records", r.id, r.model_dump(), r.source)
 
+    def delete_record(self, record_id: str) -> LNIRecord:
+        """Delete a lesson saved by an engineer (LRN-...). Records from the dataset cannot be deleted here."""
+        with self.lock:
+            r = self.records.get(record_id)
+            if not r:
+                raise KeyError(record_id)
+            if r.source != "learning":
+                raise PermissionError(f"{record_id} comes from the dataset; only saved lessons can be deleted")
+            del self.records[record_id]
+            self.store.delete("records", record_id)
+            # remove the note this lesson left on its ticket; reopen the ticket if nothing else resolved it
+            for t in self.store.all("tickets"):
+                notes = t.get("learnings", [])
+                if not any(n.get("record_id") == record_id for n in notes):
+                    continue
+                kept = []
+                for n in notes:
+                    if n.get("record_id") != record_id:
+                        kept.append(n)
+                    elif n.get("confirmed_ids"):  # the same note also confirmed a fix: keep that part
+                        kept.append({**n, "record_id": None, "root_cause": "", "fix": ""})
+                t["learnings"] = kept
+                if not kept:
+                    t["status"] = "Open"
+                self.store.upsert("tickets", t["id"], t, t.get("type", ""))
+            self.rebuild_index()  # embeddings are cached, so this is quick
+        return r
+
     def next_learning_id(self) -> str:
         n = sum(1 for r in self.records.values() if r.source == "learning") + 1
         while f"LRN-{n:04d}" in self.records:

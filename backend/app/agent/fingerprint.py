@@ -29,14 +29,17 @@ class Fingerprinter:
         self.mop_info = {m.mop_id: (m.node_type, m.vendor) for m in mops}
         self.vendors = sorted({r.vendor for r in records if r.vendor} | {m.vendor for m in mops if m.vendor})
         self.node_types = sorted({r.node_type for r in records if r.node_type})
+        self.has_mops = bool(mops)
 
     def nodes_of_type(self, node_type: str) -> list[str]:
         return sorted(n for n, (t, _) in self.node_info.items() if t.lower() == node_type.lower())
 
     def extract(self, text: str, node: str | None = None, release: str | None = None,
-                mop_id: str | None = None) -> Fingerprint:
+                mop_id: str | None = None, node_type: str | None = None) -> Fingerprint:
         low = text.lower()
         fp = Fingerprint()
+        if node_type:
+            _add(fp.node_types, node_type)
         for n in find_nodes(text) + ([node.upper()] if node else []):
             _add(fp.nodes, n)
         for m in find_mops(text) + ([mop_id.upper()] if mop_id else []):

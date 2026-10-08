@@ -31,6 +31,7 @@ class LNIRecord(BaseModel):
     verified: bool = True
     source: str = "dataset"  # dataset | learning
     verified_by: str = ""
+    verified_at: str = ""  # ISO timestamp (date + time) when an engineer saved / verified it
     success_count: int = 0
     related_ids: list[str] = Field(default_factory=list)
     extra: dict[str, Any] = Field(default_factory=dict)
@@ -114,8 +115,10 @@ class Match(BaseModel):
     root_cause: str = ""
     resolution: str = ""
     learning: str = ""
+    summary: str = ""  # short problem description, shown when no root cause was recorded
     verified: bool = True
     source: str = "dataset"
+    verified_at: str = ""
     success_count: int = 0
     reasons: list[str] = Field(default_factory=list)
     evidence: list[Evidence] = Field(default_factory=list)
@@ -127,7 +130,7 @@ class Match(BaseModel):
 
 
 class Clarification(BaseModel):
-    field: Literal["node", "mop_id", "release"]
+    field: Literal["node", "node_type", "mop_id", "release"]
     question: str
     options: list[str] = Field(default_factory=list)
 
@@ -223,6 +226,7 @@ class RecommendRequest(BaseModel):
     text: str = Field(..., description="Planned LNI description (pre_change) or symptoms / logs / commands (incident).")
     mode: Mode = "incident"
     node: str | None = None
+    node_type: str | None = Field(None, description="Product / node type (e.g. CMM, CMG) when no node name is known.")
     release: str | None = None
     mop_id: str | None = None
     skip_clarification: bool = False
@@ -246,6 +250,10 @@ class FeedbackRequest(BaseModel):
     release: str = ""
     mop_id: str = ""
     ticket_id: str | None = None
+    # mandatory when a new lesson is saved (same fields as the official JIRA KB tickets)
+    components: str = Field("", description="Product component(s), e.g. CMM or CMG-a2. Required for a new lesson.")
+    build: str = Field("", description="Software build, e.g. 26.7.0.1. Required for a new lesson.")
+    rca_category: str = Field("", description="RCA category, e.g. Nokia-Config. Required for a new lesson.")
 
 
 class FeedbackResponse(BaseModel):

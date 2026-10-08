@@ -8,6 +8,7 @@ export function useAgentRun() {
   const [result, setResult] = useState(null)
   const [running, setRunning] = useState(false)
   const [error, setError] = useState('')
+  const [runId, setRunId] = useState(0)
   const abortRef = useRef(null)
 
   async function run(body) {
@@ -18,6 +19,7 @@ export function useAgentRun() {
     setLlmText('')
     setResult(null)
     setError('')
+    setRunId((n) => n + 1)
     setRunning(true)
     try {
       await streamRecommend(
@@ -37,5 +39,5 @@ export function useAgentRun() {
     }
   }
 
-  return { events, llmText, result, running, error, run }
+  return { events, llmText, result, running, error, run, runId }
 }

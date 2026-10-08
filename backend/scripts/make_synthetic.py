@@ -1,6 +1,6 @@
 """Generate a synthetic LNI dataset shaped like the hackathon brief.
 
-Output (under data/raw/):
+Output (under data/synthetic/ - practice data, used by the unit tests; the app uses data/raw/):
   lni/lni_records.json      ~100 LNI records, including reworded duplicates of the same problem
   mops/*.md                 6 Method-of-Procedure documents
   logs/*.log                a few log / command-output snippets
@@ -1174,5 +1174,5 @@ def build(out: Path) -> None:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", type=Path, default=Path(__file__).resolve().parents[2] / "data" / "raw")
+    ap.add_argument("--out", type=Path, default=Path(__file__).resolve().parents[2] / "data" / "synthetic")
     build(ap.parse_args().out)

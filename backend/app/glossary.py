@@ -3,8 +3,9 @@ import re
 
 # Longest phrases first when matching. Values are canonical node types used in the dataset.
 NODE_TYPE_KEYWORDS: dict[str, list[str]] = {
-    "CMG": ["packet core gateway", "cloud mobile gateway", "packet gateway", "user plane", "pgw", "sgw", "upf", "cmg"],
-    "CMM": ["mobility manager", "cloud mobility manager", "mme", "amf", "cmm"],
+    "CMG": ["packet core gateway", "cloud mobile gateway", "packet gateway", "user plane", "pgw", "sgw", "upf", "smf", "cups", "lmg", "cmg"],
+    "CMM": ["mobility manager", "cloud mobility manager", "mme", "amf", "sgsn", "gummei", "ipds", "xfds", "cmm"],
+    "NRD": ["nrd", "nrf", "nssf", "network repository"],
     "Edge Router": ["edge router", "pe router", "transit router"],
     "Core Router": ["core router", "p router", "junos"],
     "OCP Cluster": ["openshift", "ocp", "kubernetes", "worker node", "oc adm"],
@@ -64,6 +65,23 @@ SYNONYMS: dict[str, list[str]] = {
     "revert": ["reset to default", "defaults", "factory default", "overwritten"],
     "default": ["reverted", "reset", "factory"],
     "reachability": ["unreachable", "static route", "oam"],
+    "crash": ["crashloopbackoff", "restarting", "restart loop"],
+    "restart": ["crashloopbackoff", "restarting"],
+    "scp": ["sftp", "file transfer"],
+    "copy": ["scp", "sftp", "file transfer"],
+    "ssh": ["connection closed", "port 22", "login", "cli"],
+    "quota": ["resource quota", "limits.cpu", "exceeded quota"],
+    "register": ["registration", "nrf", "nnrf"],
+    "bios": ["secure boot", "uefi"],
+    "boot": ["bios", "secure boot"],
+    "location": ["uli", "userlocationinformation"],
+    "pool": ["ip pool", "ip-pool-distribution", "prefixes"],
+    "unbalanced": ["imbalance", "uneven", "distribution"],
+    "uneven": ["imbalance", "distribution"],
+    "ping": ["connectivity", "packet loss"],
+    "vip": ["vrrp", "virtual ip", "vrrf"],
+    "capture": ["pcap", "trace", "mirror"],
+    "decode": ["pcmd", "script"],
 }
 
 GENERAL_PRECHECKS = [
@@ -84,8 +102,11 @@ ERROR_PHRASES = [
     "nxdomain", "unknown_ca", "unknown ca", "certificate verify failed", "no_proposal_chosen", "packet too big",
     "fragmentation needed", "disruption budget", "permission denied", "authentication failure", "license limit",
     "connection lost", "session down", "path failure", "timeout", "unreachable", "stale alarm",
+    "connection closed", "exceeded quota", "invalid user", "packet loss", "secure boot", "no priorityclass",
+    "not accessible", "registration failure", "delete session", "not supported",
 ]
 COMMAND_PREFIXES = (
     "show ", "display ", "oc ", "kubectl ", "ping ", "traceroute ", "ps ", "pgrep ", "systemctl ", "grep ",
     "cat ", "clear ", "openssl ", "df ", "du ", "nslookup ", "dig ", "snmpget ", "snmpwalk ", "chronyc ", "curl ",
+    "supervisorctl ", "sftp ", "ssh ", "cmm ", "tools perform", "admin save", "debug pcap", "./",
 )
